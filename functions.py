@@ -107,8 +107,13 @@ grid_energy_losses = 0 # track losses occuring from grid
 # radiation = [4.53, 5.31, 6.12, 6.59, 6.66, 5.73, 4.48, 4.19, 4.96, 5.21, 4.72, 4.16]
 i = 0
 vector = np.zeros([12,6])
+data = [[9.075,9.549,7.966,8.781,8.911,7.782,8.104,9.667,9.602,9.688,8.908,8.753,8.655,8.532], # jaipur
+[8.063,5.3,8.053,10.172,9.96,9.262,9.232,6.817,6.675,8.144,8.082,8.001,7.837,7.896], # mumbai
+[5.424,8.236,4.336,1.605,1.412,6.97,9.261,8.556,9.308,9.376,6.628,7.913,8.024,6.48]] # channai
+
 # for radiation in [4.53*31, 5.31*28, 6.12*31, 6.59*30, 6.66*31, 5.73*30, 4.48*31, 4.19*31, 4.96*30, 5.21*31, 4.72*30, 4.16*31]: # radiation in kWh/m^2/day
 for radiation in [4.53, 5.31, 6.12, 6.59, 6.66, 5.73, 4.48, 4.19, 4.96, 5.21, 4.72, 4.16]:
+#for radiation in data[0]:
 	current_demand = int(demand) # kWh
 	Radiation_per_day = 750 #kWh/day #IT()
 	generatedPV = generate_PV(panel_area * no_of_panels, radiation, panel_efficiency)
@@ -139,7 +144,7 @@ for radiation in [4.53, 5.31, 6.12, 6.59, 6.66, 5.73, 4.48, 4.19, 4.96, 5.21, 4.
 	vector[i,:] += params
 	i += 1
 
-
+#print(vector)
 print(vector[-1,:])
 
 
