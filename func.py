@@ -34,17 +34,19 @@ def IT(Ib, Id, n, LST):
     Rr = sin(beta / 2.0)**2 * ro
     It = Ib * Rb + Id * Rd + Ig * Rr
 
+    It[np.where(It>1.75)] = 1.75
+
     return It
 
 # Annual costing
-def calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed):
+def calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed, dailyDem):
     # Annual electricity costs
-    consumption_charges = 6 # Rs. per kWh consumption charges
+    consumption_charges = 10 # Rs. per kWh consumption charges
     wheel_charges = 1.75 # wheeling charges to account for grid losses
     FAC = 0.5 # Rs. per kWh # fuel adjustment cost
     Tax = 0.18 * consumption_charges # tax rates on per unit consumption
     feed_in_payback = 2.5 # Rs. per kWh
-    fixed_charge = 100 * 12 # base charge for electricity connection for whole year
+    fixed_charge = 200 * 12 # base charge for electricity connection for whole year
     # annual electricity bill in Rs.
     annualBill = fixed_charge + gridConsume * (consumption_charges + wheel_charges + FAC + Tax) - gridFeed * feed_in_payback
 
@@ -62,16 +64,19 @@ def calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed)
     inv_life = 10 # in years
     bat_life = 5 # in years
     #capital recovery factor
-    discount = 0.2
+    discount = 0.3
     CRF_PV = discount * (1 + discount)**pv_life / ((1 + discount)**pv_life - 1)
     CRF_inv = discount * (1 + discount)**inv_life / ((1 + discount)**inv_life - 1)
     CRF_bat = discount * (1 + discount)**bat_life / ((1 + discount)**bat_life - 1)
+
+    # Net present value
+    NPV = ((dailyDem * 365 - gridConsume) * (consumption_charges + wheel_charges + FAC + Tax) /CRF_PV) - (Investment_PV + Investment_bat + Investment_inv)
     
     # Annual expenditure in Rs.
-    AnnualCost = Investment_PV * CRF_PV + Investment_inv * CRF_inv + Investment_bat * CRF_bat + annualBill
+    ALCC = Investment_PV * CRF_PV + Investment_inv * CRF_inv + Investment_bat * CRF_bat
 
     #print(annualBill/AnnualCost)
-    return AnnualCost
+    return ALCC, annualBill, NPV
 
 def genPV(radiation, number_of_panels):
     # generate electricity from hourly PV radiation
@@ -120,18 +125,16 @@ def simulateYear(number_of_batteries, LST, generatedPV, dailyDem):
 	return gridConsume, gridFeed
 
 def simulate(PV, Bat, n, LST, Ib, Id, dailyDem):
-	number_of_panels = int(PV)
-	number_of_batteries = int(Bat)
-	# calculate radiation on a tilted surface using above function
+    number_of_panels = int(PV)
+    number_of_batteries = int(Bat)
+    # calculate radiation on a tilted surface using above function
+    radiation = IT(Ib,Id,n,LST)/1000 # kW
+    radiation[radiation<=0] = 0
+    generatedPV = genPV(radiation, number_of_panels)
+    gridConsume, gridFeed = simulateYear(number_of_batteries, LST, generatedPV, dailyDem)
+    ALCC, annualBill, NPV = calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed, dailyDem)
 
-	radiation = IT(Ib,Id,n,LST)/1000 # kW
-	radiation[radiation<=0] = 0
-	generatedPV = genPV(radiation, number_of_panels)
-
-	gridConsume, gridFeed = simulateYear(number_of_batteries, LST, generatedPV, dailyDem)
-	AnnualCost = calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed)
-
-	return AnnualCost
+    return ALCC, annualBill, NPV
 
 # update probabilities of a distribution
 def updateDist(distribution,sample,state,distname,X):

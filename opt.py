@@ -30,7 +30,6 @@ LST = arr[:,2] + 0.5 # local standard time (hour from data)
 Ib = arr[:,3] # global radiation every hour
 Id = arr[:,4] # diffuse radiation every hour
 
-
 oldPV = int(PV)
 oldBat = int(Bat)
 dailyDem = float(dailyDem)
@@ -44,22 +43,32 @@ Batprob= np.array([1/3,1/3,1/3])
 PVdist = stats.rv_discrete(name="PV",values=(X,PVprob))
 Batdist = stats.rv_discrete(name="Bat",values=(X,Batprob))
 
-oldAnnualCost = simulate(oldPV, oldBat, n, LST, Ib, Id, dailyDem)
+#number_of_panels = int(PV)
+#number_of_batteries = int(Bat)
+## calculate radiation on a tilted surface using above function
+#radiation = IT(Ib,Id,n,LST)/1000 # kW
+#radiation[radiation<=0] = 0
+#generatedPV = genPV(radiation, number_of_panels)
+#gridConsume, gridFeed = simulateYear(number_of_batteries, LST, generatedPV, dailyDem)
+#ALCC, annualBill, NPV = calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed, dailyDem)
+
+oldAnnualCost,oldannualBill, oldNPV = simulate(oldPV, oldBat, n, LST, Ib, Id, dailyDem)
 
 # optimization loop
-while PVdist.pmf(0) < 0.8 and Batdist.pmf(0) < 0.8 and oldPV > 1 and oldBat > 1:
+
+while PVdist.pmf(0) < 0.8 and Batdist.pmf(0) < 0.8 and oldPV > 0 and oldBat > 0:
 	samplePV = PVdist.rvs() # sample from PVdistribution
 	sampleBat = Batdist.rvs() #Batdist.rvs() # sample from Batdistribution
 
 	newPV = oldPV + samplePV
 	newBat = oldBat + sampleBat
 
-	newAnnualCost = simulate(newPV, newBat, n, LST, Ib, Id, dailyDem)
+	newAnnualCost, newannualBill, newNPV = simulate(newPV, newBat, n, LST, Ib, Id, dailyDem)
 
 	# add a penalty
-	#objective = newAnnualCost*(1 + 1/(1+newPV)**2 + 1/(1+newBat)**2)
+	newObj = newAnnualCost*(1 + 1/(1+newPV)**2 + 1/(1+newBat)**2)
 
-	if newAnnualCost <= oldAnnualCost:
+	if newAnnualCost <= oldAnnualCost and newannualBill <= oldannualBill: #newNPV >= oldNPV
 		if samplePV != 0:
 			PVdist = updateDist(PVdist,samplePV,True,"PV",X)
 		if sampleBat != 0:
@@ -73,55 +82,21 @@ while PVdist.pmf(0) < 0.8 and Batdist.pmf(0) < 0.8 and oldPV > 1 and oldBat > 1:
 	oldAnnualCost = float(newAnnualCost)
 	oldPV = float(newPV)
 	oldBat = float(newBat)
-	print(oldPV,oldBat,oldAnnualCost,(samplePV,sampleBat),(PVdist.pmf(0),Batdist.pmf(0)))
+	oldObj = float(newObj)
+	oldannualBill = float(newannualBill)
+	oldNPV = float(newNPV)
 
-#while PVdist.pmf(0) < 0.7 and Batdist.pmf(0) < 0.7 and oldPV > 1 and oldBat > 1:
-#	samplePV = PVdist.rvs() # sample from PVdistribution
-#
-#	newPV = oldPV + samplePV
-#
-#	newAnnualCost = simulate(newPV, oldBat, n, LST, Ib, Id, dailyDem)
-#
-#	# add a penalty
-#	#objective = newAnnualCost*(1 + 1/(1+newPV)**2 + 1/(1+newBat)**2)
-#
-#	if newAnnualCost <= oldAnnualCost:
-#		if samplePV != 0:
-#			PVdist = updateDist(PVdist,samplePV,True,"PV",X)
-#	else:
-#		if samplePV != 0:
-#			PVdist = updateDist(PVdist,samplePV,False,"PV",X)
-#
-#	oldAnnualCost = float(newAnnualCost)
-#	oldPV = float(newPV)
-#	oldBat = float(oldBat)
-#
-#	sampleBat = Batdist.rvs() #Batdist.rvs() # sample from Batdistribution
-#	newBat = oldBat + sampleBat
-#
-#	newAnnualCost = simulate(oldPV, newBat, n, LST, Ib, Id, dailyDem)
-#
-#	if newAnnualCost <= oldAnnualCost:
-#		if sampleBat != 0:
-#			Batdist = updateDist(Batdist,sampleBat,True,"Bat",X)
-#	else:
-#		if sampleBat !=0:
-#			Batdist = updateDist(Batdist,sampleBat,False,"Bat",X)
-#
-#	oldAnnualCost = float(newAnnualCost)
-#	oldPV = float(oldPV)
-#	oldBat = float(newBat)
-#
-#	print(oldPV,oldBat,oldAnnualCost,(samplePV,sampleBat),(PVdist.pmf(0),Batdist.pmf(0)))
+print(oldPV,oldBat,oldAnnualCost,oldNPV,oldannualBill)
 
-
-#grid = np.zeros((50,50))
+#ALCC = np.zeros((50,50))
+#Bill = np.zeros((50,50))
+#NPV = np.zeros((50,50))
 #for i in range(50):
 #	for j in range(50):
-#		grid[i,j] = simulate(i, j, n, LST, Ib, Id, dailyDem)
-#		#print(i,j)
+#		ALCC[i,j], Bill[i,j], NPV[i,j] = simulate(i, j, n, LST, Ib, Id, dailyDem)
+#		print(i,j)
 #
-#np.save("50vs50meshgrid-10",grid)
+##np.save("50vs50meshgrid-10",grid)
 #f, ax = plt.subplots(figsize=(9, 6))
-#sns.heatmap(grid, ax=ax)
+#sns.heatmap(NPV, ax=ax)
 #plt.show()

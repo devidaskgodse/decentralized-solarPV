@@ -159,6 +159,5 @@ tax_rate =
 def tariff(grid_consumption, tariff_rate_from_grid, grid_feed, tariff_rate_to_grid, fixed_charge, FAC, wheeling_charges, tax_rate):
 	return (1 + tax_rate) * (grid_consumption* tariff_rate_from_grid - grid_feed * tariff_rate_to_grid + fixed_charge + (FAC + wheeling_charges) * grid_consumption)
 
-
 print(tariff(grid_consumption, tariff_rate_from_grid, grid_feed, tariff_rate_to_grid, fixed_charge, FAC, wheeling_charges, tax_rate))
 '''
