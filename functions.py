@@ -5,7 +5,7 @@ import numpy as np
 from sys import argv
 #import networkx
 
-script, no_of_panels, no_of_batteries, demand = argv
+script, no_of_panels, no_of_batteries, daily_demand = argv
 
 # input variables (some could be inserted as arguments)
 ## solar PV parameters
@@ -89,7 +89,6 @@ def generate_PV(panel_area, radiation, efficiency):
 def grid_loss(): 
 	return 0.2
 
-
 # simulate 
 ## keep the demand constant throughout the day for now
 
@@ -114,7 +113,7 @@ data = [[9.075,9.549,7.966,8.781,8.911,7.782,8.104,9.667,9.602,9.688,8.908,8.753
 # for radiation in [4.53*31, 5.31*28, 6.12*31, 6.59*30, 6.66*31, 5.73*30, 4.48*31, 4.19*31, 4.96*30, 5.21*31, 4.72*30, 4.16*31]: # radiation in kWh/m^2/day
 for radiation in [4.53, 5.31, 6.12, 6.59, 6.66, 5.73, 4.48, 4.19, 4.96, 5.21, 4.72, 4.16]:
 #for radiation in data[0]:
-	current_demand = int(demand) # kWh
+	current_demand = int(daily_demand) # kWh
 	Radiation_per_day = 750 #kWh/day #IT()
 	generatedPV = generate_PV(panel_area * no_of_panels, radiation, panel_efficiency)
 	total_PVgeneration += generatedPV
@@ -144,7 +143,7 @@ for radiation in [4.53, 5.31, 6.12, 6.59, 6.66, 5.73, 4.48, 4.19, 4.96, 5.21, 4.
 	vector[i,:] += params
 	i += 1
 
-#print(vector)
+
 print(vector[-1,:])
 
 
