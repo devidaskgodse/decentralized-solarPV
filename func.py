@@ -133,6 +133,7 @@ def simulate(PV, Bat, n, LST, Ib, Id, dailyDem):
     generatedPV = genPV(radiation, number_of_panels)
     gridConsume, gridFeed = simulateYear(number_of_batteries, LST, generatedPV, dailyDem)
     ALCC, annualBill, NPV = calcAnnualCost(number_of_panels, number_of_batteries, gridConsume, gridFeed, dailyDem)
+    #share = (np.sum(generatedPV) / (dailyDem * 365))
 
     return ALCC, annualBill, NPV
 

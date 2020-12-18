@@ -9,7 +9,8 @@ import seaborn as sns
 script, PV, Bat, dailyDem = argv
 
 # Import radiation data for a location
-#data = pd.read_csv("mumbai_hourly.csv")
+# Incident radiation data obtained from
+# https://pvwatts.nrel.gov/pvwatts.php  
 data = pd.read_csv("mumbai_hourly.csv")
 # trimming the dataframe to essential variables
 data = data[:-1]
@@ -85,9 +86,12 @@ while PVdist.pmf(0) < 0.8 and Batdist.pmf(0) < 0.8 and oldPV > 0 and oldBat > 0:
 	oldObj = float(newObj)
 	oldannualBill = float(newannualBill)
 	oldNPV = float(newNPV)
+	#oldShare = float(newShare)
 
 print(oldPV,oldBat,oldAnnualCost,oldNPV,oldannualBill)
 
+
+# Generating heatmap
 #ALCC = np.zeros((50,50))
 #Bill = np.zeros((50,50))
 #NPV = np.zeros((50,50))
