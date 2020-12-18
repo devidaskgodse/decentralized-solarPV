@@ -56,39 +56,49 @@ Batdist = stats.rv_discrete(name="Bat",values=(X,Batprob))
 oldAnnualCost,oldannualBill, oldNPV = simulate(oldPV, oldBat, n, LST, Ib, Id, dailyDem)
 
 # optimization loop
-
-while PVdist.pmf(0) < 0.8 and Batdist.pmf(0) < 0.8 and oldPV > 0 and oldBat > 0:
+i = 1
+while (PVdist.pmf(0) < 0.6 and Batdist.pmf(0) < 0.6 and oldPV > 0 and oldBat > 0):
 	samplePV = PVdist.rvs() # sample from PVdistribution
 	sampleBat = Batdist.rvs() #Batdist.rvs() # sample from Batdistribution
 
-	newPV = oldPV + samplePV
-	newBat = oldBat + sampleBat
+	newPV = max(1, oldPV + samplePV)
+	newBat = max(0, oldBat + sampleBat)
 
 	newAnnualCost, newannualBill, newNPV = simulate(newPV, newBat, n, LST, Ib, Id, dailyDem)
 
-	# add a penalty
-	newObj = newAnnualCost*(1 + 1/(1+newPV)**2 + 1/(1+newBat)**2)
-
-	if newAnnualCost <= oldAnnualCost and newannualBill <= oldannualBill: #newNPV >= oldNPV
+	if newAnnualCost + newannualBill <= oldAnnualCost + oldannualBill: #newNPV >= oldNPV
+		oldAnnualCost = float(newAnnualCost)
+		oldPV = float(newPV)
+		oldBat = float(newBat)
+		oldannualBill = float(newannualBill)
 		if samplePV != 0:
 			PVdist = updateDist(PVdist,samplePV,True,"PV",X)
 		if sampleBat != 0:
 			Batdist = updateDist(Batdist,sampleBat,True,"Bat",X)
+	elif np.exp(-np.abs(newAnnualCost + newannualBill - oldAnnualCost - oldannualBill)/(i)) < np.random.random():
+		i = i + 1
+		newAnnualCost = float(oldAnnualCost)
+		newannualBill = float(oldannualBill)
+		newPV = float(oldPV)
+		newBat = float(oldBat)
 	else:
+		oldAnnualCost = float(newAnnualCost)
+		oldPV = float(newPV)
+		oldBat = float(newBat)
+		oldannualBill = float(newannualBill)
 		if samplePV != 0:
 			PVdist = updateDist(PVdist,samplePV,False,"PV",X)
 		if sampleBat !=0:
 			Batdist = updateDist(Batdist,sampleBat,False,"Bat",X)
 
-	oldAnnualCost = float(newAnnualCost)
-	oldPV = float(newPV)
-	oldBat = float(newBat)
-	oldObj = float(newObj)
-	oldannualBill = float(newannualBill)
-	oldNPV = float(newNPV)
+	#oldAnnualCost = float(newAnnualCost)
+	#oldPV = float(newPV)
+	#oldBat = float(newBat)
+	#oldannualBill = float(newannualBill)
+	#oldNPV = float(newNPV)
 	#oldShare = float(newShare)
 
-print(oldPV,oldBat,oldAnnualCost,oldNPV,oldannualBill)
+print(oldPV,oldBat,oldAnnualCost,oldannualBill)
 
 
 # Generating heatmap
