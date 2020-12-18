@@ -75,7 +75,7 @@ while (PVdist.pmf(0) < 0.6 and Batdist.pmf(0) < 0.6 and oldPV > 0 and oldBat > 0
 			PVdist = updateDist(PVdist,samplePV,True,"PV",X)
 		if sampleBat != 0:
 			Batdist = updateDist(Batdist,sampleBat,True,"Bat",X)
-	elif np.exp(-np.abs(newAnnualCost + newannualBill - oldAnnualCost - oldannualBill)/(i)) < np.random.random():
+	elif np.exp(-np.abs(newAnnualCost + newannualBill - oldAnnualCost - oldannualBill)*(i)) < np.random.random():
 		i = i + 1
 		newAnnualCost = float(oldAnnualCost)
 		newannualBill = float(oldannualBill)
